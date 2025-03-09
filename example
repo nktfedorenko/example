@@ -1,0 +1,39 @@
+import osmnx as ox
+import geopandas as gpd
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from shapely.ops import unary_union
+
+# 0. Предварительная ЗАГРУЗКА данных:
+
+central_districts = [
+    "Центральный район, Санкт-Петербург, Россия",
+    "Адмиралтейский район, Санкт-Петербург, Россия",
+    "Василеостровский район, Санкт-Петербург, Россия",
+    "Петроградский район, Санкт-Петербург, Россия"
+]
+
+districts_gdf = ox.geocode_to_gdf(central_districts)
+central_area  = districts_gdf.unary_union  # объединяем полигоны районов
+
+# Здания
+buildings = ox.geometries_from_polygon(central_area, tags={"building": True})
+# Граф дорог
+street_graph = ox.graph_from_polygon(central_area, network_type='drive')
+nodes, edges = ox.graph_to_gdfs(street_graph)
+# POIs
+pois = ox.geometries_from_polygon(central_area, tags={
+    "amenity": ["restaurant", "cafe", "bar"], 
+    "tourism": ["hotel"]
+})
+# Памятники
+monuments = ox.geometries_from_polygon(central_area, tags={
+    "historic": ["monument", "memorial"],
+    "tourism":  "artwork"
+})
+
+print("Buildings:", len(buildings))
+print("Edges:", len(edges))
+print("POIs:", len(pois))
+print("Monuments:", len(monuments))
